@@ -1,2 +1,2 @@
-# upgraded-carnival
+# PrologLabs
 PrologLabs
