@@ -1,0 +1,57 @@
+% Пример с семантическими сетями
+
+:- discontiguous max_speed/2, steering_wheel/2, fuel/2, country/2, body/2.
+
+isa( japan_car, car ).
+isa( german_car, car ).
+
+isa( audiRS6, german_car ).
+isa( land_cruser, japan_car ).
+isa( toyota_crown, japan_car ).
+
+fuel( car, gasoline ). % топливо
+fuel( land_cruser, disel ).
+
+body( car, sedan ). % тип кузова
+body( land_cruser, suv ).
+body( audiRS6, vagon ).
+
+country( japan_car, japan ). % страна 
+country( german_car, german ).
+
+steering_wheel( japan_car, right ). % сторона руля
+steering_wheel( german_car, left ).
+
+max_speed( audiRS6, 300 ). % максимальная скорость
+max_speed( land_cruser, 180 ).
+max_speed( toyota_crown, 180 ).
+
+fuel( X, Method ):-
+    isa( X, SuperX ),
+    fuel( SuperX, Method ).
+
+body( X, Method ):-
+    isa( X, SuperX ),
+    body( SuperX, Method ).
+
+country( X, Method ):-
+    isa( X, SuperX ),
+    country( SuperX, Method ).
+
+steering_wheel( X, Method ):-
+    isa( X, SuperX ),
+    steering_wheel( SuperX, Method ).
+
+max_speed( X, Method ):-
+    isa( X, SuperX ),
+    max_speed( SuperX, Method ).
+    
+fact( Fact ):-                % Факт - не переменная, Fact=Rel(Arg1,Arg2)
+    Fact, !.
+
+fact( Fact ):-
+    Fact = ..[ Rel, Arg1, Arg2 ],
+    isa( Arg1, SuperArg ),      % Восхождение по иерархии
+    SuperFact = ..[ Rel, SuperArg, Arg2 ],
+    fact( SuperFact ).
+

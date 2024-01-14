@@ -1,0 +1,324 @@
+
+cond(1, "Япония").
+cond(2, "Германия").
+cond(3, "Россия").
+cond(4, "США").
+cond(5, "Швеция").
+cond(6, "Корея").
+
+cond(7, "Седан").
+cond(8, "Универсал").
+cond(9, "Хетчбек").
+cond(10, "Внедорожник").
+cond(11, "Купе").
+cond(12, "Лифтбек").
+cond(13, "Родстер").
+cond(14, "Минивен").
+
+cond(15, "Бензин").
+cond(16, "Дизель").
+cond(17, "Гибрид").
+cond(18, "Электричество").
+
+% Год производства
+cond(19, 2003).
+cond(20, 2022).
+cond(21, 2006).
+cond(22, 2002).
+cond(23, 2007).
+
+% Цены 
+cond(24, 13500).
+cond(25, 100500).
+cond(26, 8500).
+cond(27, 8000).
+cond(28, 5700).
+cond(29, 15000).
+
+% Правила: название, набор фактов
+rule("Toyota Crown S180", [1, 7, 15, 19, 24] ).
+rule("Audi A6 C6", [2, 8, 16, 21, 26] ).
+rule("Lada Vesta NG", [3, 7, 15, 20, 27] ).
+rule("Ford Fusion I", [4, 9, 15, 22, 28] ).
+rule("Volvo XC70 II", [5, 8, 15, 23, 29] ).
+rule("Toyota Crown S230", [1, 7, 17, 20, 25] ).
+
+% поиск элемента 
+% ?- rule("Toyota Crown S180", X, C).
+% C = 13500,
+% X = [1, 7, 15, 19, 24]
+
+% Поиск несуществующего объекта
+% ?- rule("Lamborgini huracan", X, C).
+% false
+
+% Добавление двух новых объектов в систему
+% assert( rule( "Toyota Crown S230", [1, 7, 17, 20], 59000 ) ).
+% assert( rule( "Volkswagen Transporter T5", [2, 14, 15, 19], 13000 ) ).
+
+% Какая то попытка написать ЭС %
+do_expert_job :-
+	show_menu, !.
+
+show_menu :-
+	write( "->  1 - consultation" ), nl,
+    write( "->  2 - exit" ), nl,
+    read( Choice ),
+    process( Choice ).
+
+process(1):-
+	do_consulting.
+process(2):-
+    fail.
+    
+do_consulting:-
+    clear,
+    emptyAnswers(),
+    go, !.
+do_consulting:- fail.
+  
+go:-
+    findRule( _, Conds ),
+    getNewCond( Conds, R1 ), !,
+    check( R1 ),
+    go.
+  
+go:-
+    not( findRule( _, _ ) ),
+    write( "No found a car" ), nl,
+    askForAdd,
+    show_menu.
+
+check( [ H | _ ] ) :- 
+    cond( H, Text ),
+    inpo( H, Text).
+
+check( [] ) :- 
+    yesAnsw( Y1 ), 
+    noAnsw( N1 ),
+    findRule( Mygoal, Conds ),
+    write( "Finded " ), write( Mygoal ), nl,
+    write( "Conds " ), write( Conds ), nl,
+    write( "Yes answers " ), write( Y1 ), nl,
+    write( "No answers " ), write( N1 ), nl, nl, !,
+    show_menu.
+    
+inpo( Cond, Text ) :-
+    write("Question:- "), write( Text ), write("?"), nl,
+    write("\tType y for 'yes': "), nl,
+    write("\tType n for 'no': "), nl,
+    read( Response ),
+    do_answer( Cond, Response ).
+
+do_answer( _, 0 ):-
+    fail.
+
+do_answer( Bno, y ):-
+    yesAnsw( YesAnsw ), append( YesAnsw, [ Bno ], Y1 ), retract( yesAnsw( _ ) ), assert( yesAnsw( Y1 ) ),
+    write( "yes" ), nl, nl.
+
+do_answer( Bno, n ):-
+    noAnsw( NoAnsw ), append( NoAnsw, [ Bno ], N1 ), retract( noAnsw( _ ) ), assert( noAnsw( N1 ) ),
+    write( "no" ), nl, nl.
+
+getNewCond( Conds, X ):-
+    yesAnsw( Y1 ),
+    subtract( Conds, Y1, X ).
+
+askForAdd:-
+    write( "->  1 - add new car" ), nl,
+    write( "->  2 - exit" ), nl,
+    read( Choice ),
+    processAdding( Choice ).
+
+processAdding( 1 ):- addNewItem.
+
+processAdding( 2 ):- fail.
+
+/*
+% Самый простой вариант, но не особо хороший и классный
+addNewItem:- 
+    % write("Write car country: "), nl,
+    % read( _ ),
+    write( "Write car name: " ), nl,
+    read( CarName ),
+    yesAnsw( X ),
+    assert( rule( CarName, X ) ),
+    write( "New car added" ), nl, nl.
+*/
+
+% Вариант сложнее но красивее и логичнее
+addNewItem:- 
+    % write("Write car country: "), nl,
+    % read( _ ),
+    selectCountry( Country ),
+    selectBodyType( Body ),
+    selectFuel( Fuel ),
+    selectCarYear( Year ), 
+    selectCarCost( Cost ),
+    write( "Write car name: " ), nl,
+    read( CarName ),
+    % yesAnsw( X ),
+    assert( rule( CarName, [ Country, Body, Fuel, Year, Cost ] ) ),
+    write( "New car added" ), nl, nl.
+
+country(1, "Япония").
+country(2, "Германия").
+country(3, "Россия").
+country(4, "США").
+country(5, "Швеция").
+country(6, "Корея").
+
+selectCountry( Country ):- 
+    writeCountries,
+    write( "Enter country code:" ), nl,
+    read( Country ).
+
+writeCountries:-
+    write("Countries: "), nl,
+    country( Number, Country ),
+    write( Number ), write( " ->" ), write( Country ), nl, fail.
+writeCountries.
+
+bodyType(7, "Седан").
+bodyType(8, "Универсал").
+bodyType(9, "Хетчбек").
+bodyType(10, "Внедорожник").
+bodyType(11, "Купе").
+bodyType(12, "Лифтбек").
+bodyType(13, "Родстер").
+bodyType(14, "Минивен").
+
+selectBodyType( BodyType ):- 
+    writeBodies,
+    write( "Enter body type code:" ), nl,
+    read( BodyType ).
+
+writeBodies:-
+    write("Bodies: "), nl,
+    bodyType( Number, Body ),
+    write( Number ), write( " ->" ), write( Body ), nl, fail.
+writeBodies.
+
+fuel(15, "Бензин").
+fuel(16, "Дизель").
+fuel(17, "Гибрид").
+fuel(18, "Электричество").
+ 
+selectFuel( Fuel ):- 
+    writeFuel,
+    write( "Enter fuel code:" ), nl,
+    read( Fuel ).
+
+writeFuel:-
+    write("Fuel types: "), nl,
+    fuel( Number, Fuel ),
+    write( Number ), write( " ->" ), write( Fuel ), nl, fail.
+writeFuel.
+
+year(19, 2003).
+year(20, 2022).
+year(21, 2006).
+year(22, 2002).
+year(23, 2007).
+
+selectCarYear( Number ):- 
+    writeYear,
+    write( "Enter car year number: " ), nl,
+    read( Number ).
+    %processCarYear( Number, Year ).
+
+writeYear:-
+    write("Years: "), nl,
+    year( Number, Year ),
+    write( Number ), write( " ->" ), write( Year ), nl, fail.
+writeYear.
+
+cost(24, 13500).
+cost(25, 100500).
+cost(26, 8500).
+cost(27, 8000).
+cost(28, 5700).
+cost(29, 15000).
+
+selectCarCost( Number ):- 
+    writeCost,
+    write( "Enter car cost number: " ), nl,
+    read( Number ).
+    %processCarYear( Number, Year ).
+
+writeCost:-
+    write("Costs: "), nl,
+    cost( Number, Cost ),
+    write( Number ), write( " ->" ), write( Cost ), nl, fail.
+writeCost.
+
+/*
+processCarYear( Number, Year ):- 
+    not( year( _, Year ) ),
+    getMaxNumberYear( MaxYear ),
+    write( "Max year is " ), write( MaxYear ), nl.
+    %assert(  ).
+
+processCarYear( Number, Year ):- 
+    year( Number, Year ).
+
+getMaxNumberYear( X ):- year( X, _ ), getMaxNumberYearCounter( X ).
+
+getMaxNumberYearCounter( X ):- 
+    year( N, _ ), !,
+    X \= N,
+    write( "X is " ), write( X ), nl,
+    write( "N is " ), write( N ), nl,
+    X > N,
+    X is N.
+    %getMaxNumberYearCounter( X ).
+%getMaxNumberYearCounter( X ):- write( "Max year is " ), write( X ), nl, ! .
+*/
+
+% поиск правил в соответствии с ответами пользователя
+
+findRule( Rule, Conds ) :- 
+    rule( Rule, Conds ),
+    yesAnsw( YesAnsw ),
+    noAnsw( NoAnsw ),
+    checkAllConds( Conds, YesAnsw, NoAnsw ).
+
+checkAllConds( Conds, [ H | T ], [ H1 | T1 ] ) :- 
+    member( H, Conds ),
+    not( member( H1, Conds ) ),
+    checkAllConds( Conds, T, T1 ).
+
+checkAllConds( Conds, [ H | T ], [] ) :- 
+    member( H, Conds ),
+    checkAllConds( Conds, T, [] ).
+
+checkAllConds( Conds, [], [ H1 | T1 ] ) :- 
+    not( member( H1, Conds ) ),
+    checkAllConds( Conds, [], T1 ).
+
+checkAllConds( _, [], [] ).
+
+emptyAnswers():-
+    assert( yesAnsw( [] ) ),
+    assert( noAnsw( [] ) ).
+
+clear:-
+    retract( yesAnsw( _ ) ), fail;
+    retract( noAnsw( _ ) ), fail;
+    !.
+
+test:- 
+    getMaxNumberYear( X ),
+    write( "Max year is " ), write( X ), nl.
+
+:- dynamic yesAnsw/1, noAnsw/1, rule/2, year/2.
+
+% checkAllConds( [1, 7, 15, 19, 24], [1, 7], [ 15 ] ). - false 
+% checkAllConds( [1, 7, 17, 20, 25], [1, 7], [ 15 ] ). - true 
+
+
+
+
+
+
